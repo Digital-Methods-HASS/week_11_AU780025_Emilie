@@ -1,0 +1,289 @@
+---
+title: "Kreaturtællinger i Danmark"
+author: "Thilde Laue Jacobsen og Emilie Balslev"
+date: "2025-09-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##library
+```{r libraries, echo = FALSE}
+# install.packages("gganimate")
+# install.packages("gganimate")
+# install.packages("gifski")
+# install.packages("av")
+# install.packages("gapminder")
+library(tidyverse)
+library(gganimate)
+library(gifski)
+library(av)
+library(gapminder)
+library(here)
+```
+
+##get data
+
+```{r get-document}
+kreatur_jylland <- read_csv2("data/jylland_kreatur_count.csv")
+class(kreatur_jylland)
+head(kreatur_jylland)
+
+```
+```{r}
+library(tidyverse)
+
+# Pivot the data longer
+kreatur_jylland_long <- kreatur_jylland %>%
+  pivot_longer(
+    cols = -Year,  # Keep 'Year' as-is; pivot all other columns
+    names_to = "Region",
+    values_to = "Count"
+  )
+head(kreatur_jylland_long)
+```
+```{r get-document}
+kreatur_islands <- read_csv2("data/islands_kreatur_count.csv")
+class(kreatur_islands)
+head(kreatur_islands)
+
+```
+```{r}
+library(tidyverse)
+
+# Pivot the data longer
+kreatur_islands_long <- kreatur_islands %>%
+  pivot_longer(
+    cols = -Year,  # Keep 'Year' as-is; pivot all other columns
+    names_to = "Region",
+    values_to = "Count"
+  )
+head(kreatur_islands_long)
+```
+
+
+
+```{r}
+library(tidyverse)
+library(gganimate)
+library(ggplot2)
+library(scales)
+
+# Assuming 'kreatur_long' is already created as shown earlier
+# Create the animated plot
+p <- kreatur_jylland_long %>%
+  ggplot(aes(x = Year, y = Count, color = Region, group = Region, size = Count)) +
+  geom_point() +
+  labs(title = "Kreaturtaellinger i Jylland (Year: {frame_time %>% round(0)})",
+       x = "Year",
+       y = "Kreatur Taelling") +
+  transition_time(Year) +
+  ease_aes('linear') +
+  theme_minimal() +
+  scale_y_continuous(
+    breaks = seq(0, max(kreatur_long$Count), by = 25000)  # Adjust interval here
+  )
+
+
+# Animate and preview the plot
+animate(p, nframes = 200, fps = 10, width = 500, height = 400)
+
+# To save as a GIF
+anim_save("kreatur_jylland_tidslinje.gif", animation = last_animation())
+
+```
+```{r}
+library(tidyverse)
+library(gganimate)
+library(ggplot2)
+library(scales)
+
+# Assuming 'kreatur_long' is already created as shown earlier
+# Create the animated plot
+q <- kreatur_islands_long %>%
+  ggplot(aes(x = Year, y = Count, color = Region, group = Region, size = Count)) +
+  geom_point() +
+  labs(title = "Kreaturtaellinger på Oerne (Year: {frame_time %>% round(0)})",
+       x = "Year",
+       y = "Kreatur Taelling") +
+  transition_time(Year) +
+  ease_aes('linear') +
+  theme_minimal() +
+  scale_y_continuous(
+    breaks = seq(0, max(kreatur_long$Count), by = 25000)  # Adjust interval here
+  )
+
+
+# Animate and preview the plot
+animate(q, nframes = 200, fps = 10, width = 500, height = 400)
+
+# To save as a GIF
+anim_save("kreatur_islands_tidslinje.gif", animation = last_animation())
+
+```
+
+```{r}
+library(tidyverse)
+
+# Summarizing both datasets (assuming the second dataset is available)
+kreatur_jylland_summary <- kreatur_jylland_long %>%
+  group_by(Year) %>%
+  summarize(Total_Count_Jylland = sum(Count, na.rm = TRUE))
+
+kreatur_islands_summary <- kreatur_islands_long %>%
+  group_by(Year) %>%
+  summarize(Total_Count_Islands = sum(Count, na.rm = TRUE))
+
+# Merging the two datasets to compare them
+sammenligning_kreatur <- left_join(kreatur_jylland_summary, kreatur_islands_summary, by = "Year")
+
+# Overlaying the two lines on the same plot
+sammenligning_kreatur %>%
+  ggplot(aes(x = Year)) +
+  geom_line(aes(y = Total_Count_Jylland, color = "Jylland"), size = 1) +  # First variable
+  geom_point(aes(y = Total_Count_Jylland, color = "Jylland"), size = 2) +
+  geom_line(aes(y = Total_Count_Islands, color = "Islands"), size = 1) +  # Second variable
+  geom_point(aes(y = Total_Count_Islands, color = "Islands"), size = 2) +
+  labs(title = "Udviklingen af kreaturholdet på hhv Oerne og i Jylland",
+       x = "Year",
+       y = "Stoerrelse paa kreaturhold",
+       color = "Region") +
+  scale_color_manual(values = c("Jylland" = "#1f77b4",  # blue for Jylland
+                               "Islands" = "#ffeb3b")) +  # yellow for Islands
+  theme_minimal()
+```
+```{r}
+svin_danmark <- read_csv2("data/Denmark_svin_count.csv")
+class(svin_danmark)
+head(svin_danmark)
+
+```
+
+```{r}
+library(tidyverse)
+
+# Pivot the data longer
+svin_danmark_long <- svin_danmark %>%
+  pivot_longer(
+    cols = -Year,  # Keep 'Year' as-is; pivot all other columns
+    names_to = "Region",
+    values_to = "Count"
+  )
+head(svin_danmark_long)
+```
+
+```{r}
+svin_danmark_summary <- svin_danmark_long %>%
+  group_by(Year) %>%
+  summarize(Total_Count_Svin = sum(Count, na.rm = TRUE))
+
+head(svin_danmark_summary)
+```
+
+```{r}
+library(tibble)
+library(dplyr)
+
+# Define the two tibbles
+Jylland <- tibble(
+  Year = c(1866, 1871, 1876, 1881, 1888, 1893, 1898, 1903, 1909, 1914),
+  Total_Count_Jylland = c(694982, 718543, 794698, 883581, 829805, 976331, 986747, 1065324, 1328033, 1495086)
+)
+
+Islands <- tibble(
+  Year = c(1866, 1871, 1876, 1881, 1888, 1893, 1898, 1903, 1909, 1914),
+  Total_Count_Islands = c(498879, 520355, 553623, 586497, 629722, 719859, 758050, 775142, 925949, 967776)
+)
+
+# Join the tibbles by Year and summarize total
+kreatur_danmark_summary <- left_join(Jylland, Islands, by = "Year") %>%
+  mutate(Total_Count_All = Total_Count_Jylland + Total_Count_Islands)
+
+# View the summarized data
+print(kreatur_danmark_summary)
+```
+
+```{r}
+kreatur_alle <- tibble(
+  Year = c(1866, 1871, 1876, 1881, 1888, 1893, 1898, 1903, 1909, 1914),
+  Total_Count_All = c(1193861 , 1238898 , 1348321 , 1470078 , 1459527 , 1696190 , 1744797 , 1840466 , 2253982 , 2462862)
+)
+
+svin_alle <- tibble(
+  Year = c(1866, 1871, 1876, 1881, 1888, 1893, 1898, 1903, 1909, 1914),
+  Total_Count_All = c(381512 , 442421 , 503667 , 527417 , 770785 , 829131 , 1168493 , 1456699 , 1467822 , 2496706)
+)
+
+# Combine the two datasets into one (with appropriate column names)
+sammenligning_kreatur_svin <- kreatur_alle %>%
+  left_join(svin_alle, by = "Year")
+
+library(dplyr)
+
+sammenligning_kreatur_svin <- sammenligning_kreatur_svin %>%
+  rename(
+    Kreatur = Total_Count_All.x,
+    Svin = Total_Count_All.y
+  )
+
+# View the combined dataset
+print(sammenligning_kreatur_svin)
+```
+
+```{r}
+library(tidyr)
+library(dplyr)
+
+sammenligning_kreatur_svin_long <- sammenligning_kreatur_svin %>%
+  pivot_longer(cols = c(Kreatur, Svin), 
+               names_to = "Type", 
+               values_to = "Count")
+
+head(sammenligning_kreatur_svin_long)
+```
+
+
+```{r}
+library(ggplot2)
+
+ggplot(sammenligning_kreatur_svin_long, aes(x = factor(Year), y = Count, fill = Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Kreatur" = "#2ca02c",  # green
+                               "Svin" = "#d62728")) +  # red
+  labs(x = "Year", y = "Count", title = "Comparison of Kreatur and Svin Over Time") +
+  theme_minimal()
+```
+
+```{r}
+senere_kreatur_svin <- read_csv2("data/1920_kreatur_svin.csv")
+class(senere_kreatur_svin)
+head(senere_kreatur_svin)
+
+```
+```{r}
+library(tidyr)
+library(dplyr)
+library(scales)
+
+# Reshape the data to long format
+senere_kreatur_svin_long <- senere_kreatur_svin %>%
+  pivot_longer(cols = c(Kreatur, Svin), 
+               names_to = "Type", 
+               values_to = "Count")
+
+library(ggplot2)
+
+ggplot(senere_kreatur_svin_long, aes(x = Year, y = Count, color = Type)) +
+  geom_line(size = 1) +  # Line plot
+  labs(title = "Comparison of Kreatur and Svin Over Time",
+       x = "Year",
+       y = "Count",
+       color = "Type") +  # Add a legend title
+   scale_color_manual(values = c("Kreatur" = "#2ca02c", "Svin" = "#d62728")) +
+  scale_y_continuous(labels = comma) +
+  theme_minimal()  # Clean theme
+```
+
+
